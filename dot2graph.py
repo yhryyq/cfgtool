@@ -2,6 +2,8 @@ from getdot import read_dot_files
 from pybgl.graph import DirectedGraph
 from collections import namedtuple,deque
 from filter import checkProject
+import sys
+sys.setrecursionlimit(3000)
 """
 def dfs(graph, start_vertex, vertex_map):
     visited = set()
@@ -100,11 +102,17 @@ def dfs_all_paths(graph, start_vertex, visited_edges, path, global_node_data,onl
     if not out_edges:
         if only_cross:
             if check_path_backf(path):
-                path_info = " -> ".join(f"{global_node_data[v].line_number}({global_node_data[v].file_name}) ({global_node_data[v].function_name})" for v in path)
-                print("Path:", path_info)
+                path_info = "\n -> ".join(f"{global_node_data[v].line_number}({global_node_data[v].file_name}) ({global_node_data[v].function_name})" for v in path)
+                print("Path:\n", path_info)
+                print("====================")
+                with open('paths.txt', 'a') as file:
+                    file.write(path_info + '\n')
         else:
-            path_info = " -> ".join(f"{global_node_data[v].line_number}({global_node_data[v].file_name}) ({global_node_data[v].function_name})" for v in path)
-            print("Path:", path_info)
+            path_info = "\n -> ".join(f"{global_node_data[v].line_number}({global_node_data[v].file_name}) ({global_node_data[v].function_name})" for v in path)
+            print("Path:\n", path_info)
+            print("====================")
+            with open('paths.txt', 'a') as file:
+                file.write(path_info + '\n')
     else:
         for edge in out_edges:
             if edge not in visited_edges:
@@ -116,9 +124,15 @@ def dfs_all_paths(graph, start_vertex, visited_edges, path, global_node_data,onl
                         source_vertex = graph.source(edge)
                         if (global_node_data[source_vertex].function_name == current_function_name):
                             filtered_edges.append(edge)
-                    dfs_all_paths(graph, target_vertex, set(filtered_edges), path.copy(), global_node_data,only_cross)
+                    try:
+                        dfs_all_paths(graph, target_vertex, set(filtered_edges), path.copy(), global_node_data,only_cross)
+                    except RecursionError:
+                        print("RecursionError detected")
                 else:
-                    dfs_all_paths(graph, target_vertex, visited_edges.union({edge}), path.copy(), global_node_data,only_cross)
+                    try:
+                        dfs_all_paths(graph, target_vertex, visited_edges.union({edge}), path.copy(), global_node_data,only_cross)
+                    except RecursionError:
+                        print("RecursionError detected")
 
     path.pop()
 
@@ -174,11 +188,17 @@ def dfs_all_paths_backf(graph, start_vertex, visited_edges, path, global_node_da
     if not in_edges:
         if only_cross:
             if check_path_backf(path):
-                path_info = " -> ".join(f"{global_node_data[v].line_number}({global_node_data[v].file_name}) ({global_node_data[v].function_name})" for v in path)
-                print("Path:", path_info)
+                path_info = "\n -> ".join(f"{global_node_data[v].line_number}({global_node_data[v].file_name}) ({global_node_data[v].function_name})" for v in path)
+                print("Path\n:", path_info)
+                print("====================")
+                with open('paths_4.txt', 'a') as file:
+                    file.write(path_info + '\n')
         else:
-            path_info = " -> ".join(f"{global_node_data[v].line_number}({global_node_data[v].file_name}) ({global_node_data[v].function_name})" for v in path)
-            print("Path:", path_info)
+            path_info = "\n -> ".join(f"{global_node_data[v].line_number}({global_node_data[v].file_name}) ({global_node_data[v].function_name})" for v in path)
+            print("Path:\n", path_info)
+            print("====================")
+            with open('paths_4.txt', 'a') as file:
+                file.write(path_info + '\n')
             #print(f"cross:{check_path_backf(path)}")
     else:
         for edge in in_edges:
@@ -191,9 +211,15 @@ def dfs_all_paths_backf(graph, start_vertex, visited_edges, path, global_node_da
                         target_vertex = graph.target(edge)
                         if (global_node_data[target_vertex].function_name == current_function_name):
                             filtered_edges.append(edge)
-                    dfs_all_paths_backf(graph, source_vertex, set(filtered_edges), path.copy(), global_node_data, only_cross)
+                    try:
+                        dfs_all_paths_backf(graph, source_vertex, set(filtered_edges), path.copy(), global_node_data, only_cross)
+                    except RecursionError:
+                        print("RecursionError detected")
                 else:
-                    dfs_all_paths_backf(graph, source_vertex, visited_edges.union({edge}), path.copy(), global_node_data,only_cross)
+                    try:
+                        dfs_all_paths_backf(graph, source_vertex, visited_edges.union({edge}), path.copy(), global_node_data,only_cross)
+                    except RecursionError:
+                        print("RecursionError detected")
 
     path.pop()
 
@@ -251,7 +277,7 @@ def edge_exists(graph, source_vertex, target_vertex):
 print("========getting the function info")
 NodeData = namedtuple('NodeData', ['line_number', 'line_flows', 'node_code', 'callsites', 'is_return_line', 'function_name', 'file_name'])
 
-funcs = read_dot_files("./outdir_scipy_a13a7b82d4664c767575097c4a60c0b5fcd1098a_pyc")
+funcs = read_dot_files("./outdir_scipy_8fa4b7364d98659dd8fe28727f60d99a14b95850_pyc")
 #funcs = read_dot_files("./outdir_cpython_pyc")
 #funcs: filename, function_name, line_flows, callsites, node_code, return_lines
 
@@ -306,6 +332,8 @@ for func in funcs:
     graphs[function_data['function_name']] = {'graph': g, 'node_data_map': func_node_data, 'vertex_map': local_vertex_map}
     vertex_maps[function_data['function_name']] = local_vertex_map
 
+with open("vertex_maps.txt", "w") as file:
+    file.write(str(vertex_maps))
 
 print("========getting pyc mapping")
 #get the rule-based mapping
@@ -346,8 +374,14 @@ for func_name, func_data in graphs.items():
                 
                 for mapping  in func_mapping:
                     if mapping[0] == callsite:
-                        r_callsite=mapping[1]
-                        called_vertex_map = vertex_maps[r_callsite]
+                        r_callsite=mapping[1].strip(' ')
+                        if '(' in r_callsite and ')' in r_callsite:
+                            r_callsite = r_callsite.split(')')[1].strip(' ')
+                        try:
+                            called_vertex_map = vertex_maps[r_callsite]
+                        except:
+                            print(f"mapping error,r_callsite:{r_callsite}")
+                            continue
                         entry_line_number = min(called_vertex_map.keys())
                         entry_vertex = called_vertex_map[entry_line_number]
                         #print(vertex, entry_vertex)
@@ -386,8 +420,8 @@ for func_name, data in graphs.items():
 
 """
 #scipy
-function_name = "fitpack_bispev"
-start_line_number = 170
+function_name = "_get_spline_boundary_mode"
+start_line_number = 245
 
 #cpython
 #function_name = "frozenset_new"
