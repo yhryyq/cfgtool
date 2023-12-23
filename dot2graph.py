@@ -385,7 +385,8 @@ for func_name, func_data in graphs.items():
                         if called_vertex_map.keys():
                             entry_line_number = min(called_vertex_map.keys())
                         else:
-                            print(f"r_callsite:{r_callsite} is empty")
+                            print(f"r_callsite:{r_callsite} is empty"
+                            continue)
                         entry_vertex = called_vertex_map[entry_line_number]
                         #print(vertex, entry_vertex)
                         if not edge_exists(global_graph, ret_vertex, vertex):
