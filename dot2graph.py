@@ -120,7 +120,7 @@ def dfs_all_paths(graph, start_vertex, visited_edges, path, global_node_data,onl
         for edge in out_edges:
             if edge not in visited_edges:
                 target_vertex = graph.target(edge)
-                target_info = f"{global_node_data[target_vertex].line_number}({global_node_data[source_vertex].file_name}) ({global_node_data[target_vertex].function_name})"
+                target_info = f"{global_node_data[target_vertex].line_number}({global_node_data[target_vertex].file_name}) ({global_node_data[target_vertex].function_name})"
                 if is_return_line:
                     filtered_edges = []
                     for edge in visited_edges:
