@@ -469,4 +469,5 @@ if function_name in vertex_maps and start_line_number in vertex_maps[function_na
     elif sys.argv[5] == 'f':
         dfs_all_paths(global_graph, start_vertex, set(), [], global_node_data,True)
 else:
-    print(f"函数 {function_name} 或行号 {start_line_number} 不存在于图中。")
+    print(f"function({function_name}):{vertex_maps[function_name]}")
+    print(f"function_name:{function_name} or line number:{start_line_number} cannot be found")
