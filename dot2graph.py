@@ -4,6 +4,9 @@ from collections import namedtuple,deque
 from filter import checkProject
 import sys
 sys.setrecursionlimit(3000)
+from tqdm import tqdm
+import sys
+
 """
 def dfs(graph, start_vertex, vertex_map):
     visited = set()
@@ -117,7 +120,7 @@ def dfs_all_paths(graph, start_vertex, visited_edges, path, global_node_data,onl
         for edge in out_edges:
             if edge not in visited_edges:
                 target_vertex = graph.target(edge)
-                target_info = f"{global_node_data[target_vertex].line_number}({global_node_data[source_vertex].file_name}) ({global_node_data[target_vertex].function_name})"
+                target_info = f"{global_node_data[target_vertex].line_number}({global_node_data[target_vertex].file_name}) ({global_node_data[target_vertex].function_name})"
                 if is_return_line:
                     filtered_edges = []
                     for edge in visited_edges:
@@ -277,7 +280,9 @@ def edge_exists(graph, source_vertex, target_vertex):
 print("========getting the function info")
 NodeData = namedtuple('NodeData', ['line_number', 'line_flows', 'node_code', 'callsites', 'is_return_line', 'function_name', 'file_name'])
 
-funcs = read_dot_files("./outdir_scipy_8fa4b7364d98659dd8fe28727f60d99a14b95850_pyc")
+dot_dir=sys.argv[1]
+funcs = read_dot_files(dot_dir)
+
 #funcs = read_dot_files("./outdir_cpython_pyc")
 #funcs: filename, function_name, line_flows, callsites, node_code, return_lines
 
@@ -337,7 +342,8 @@ with open("vertex_maps.txt", "w") as file:
 
 print("========getting pyc mapping")
 #get the rule-based mapping
-cfunc, ctype = checkProject('./scipy')
+proj_dir=sys.argv[2]
+cfunc, ctype = checkProject(proj_dir)
 seen = set()
 func_mapping = []
 for item in cfunc:
@@ -349,7 +355,7 @@ print(func_mapping)
 
 cross_lan_map=[]
 print("========linking the graphs")
-for func_name, func_data in graphs.items():
+for func_name, func_data in tqdm(graphs.items()):
     local_graph = func_data['graph']
     local_vertex_map = func_data['vertex_map']
     node_data_map = func_data['node_data_map']
@@ -422,9 +428,13 @@ for func_name, data in graphs.items():
                         called_graph.add_edge(rv, v)
 
 """
+function_name=sys.argv[3]
+start_line_number=int(sys.argv[4])
+
 #scipy
-function_name = "_get_spline_boundary_mode"
-start_line_number = 245
+#function_name = "convert_datetime_divisor_to_multiple"
+#start_line_number = 975
+
 
 #cpython
 #function_name = "frozenset_new"
@@ -454,6 +464,10 @@ if function_name in vertex_maps and start_line_number in vertex_maps[function_na
     start_vertex = vertex_maps[function_name][start_line_number]
     #dfs(global_graph, start_vertex, global_node_data=global_node_data)
     #dfs_path(global_graph, start_vertex,global_node_data)
-    dfs_all_paths_backf(global_graph, start_vertex, set(), [], global_node_data,True)
+    if sys.argv[5] == 'b':
+        dfs_all_paths_backf(global_graph, start_vertex, set(), [], global_node_data,True)
+    elif sys.argv[5] == 'f':
+        dfs_all_paths(global_graph, start_vertex, set(), [], global_node_data,True)
 else:
-    print(f"函数 {function_name} 或行号 {start_line_number} 不存在于图中。")
+    print(f"function({function_name}):{vertex_maps[function_name]}")
+    print(f"function_name:{function_name} or line number:{start_line_number} cannot be found")
