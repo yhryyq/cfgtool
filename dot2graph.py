@@ -404,7 +404,7 @@ for func_name, func_data in tqdm(graphs.items()):
                                     global_graph.add_edge(ret_vertex, vertex)
                                 cross_lan_map.append((ret_vertex, vertex))
 
-
+print("========linking done")
 """
 for func_name, data in graphs.items():
     graph = data['graph']
