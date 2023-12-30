@@ -399,7 +399,7 @@ for func_name, func_data in graphs.items():
                             continue
                         entry_vertex = called_vertex_map[entry_line_number]
                         #print(vertex, entry_vertex)
-                        if not edge_exists(global_graph, ret_vertex, vertex):
+                        if not edge_exists(global_graph, vertex, entry_vertex):
                             global_graph.add_edge(vertex, entry_vertex)
                         cross_lan_map.append((vertex, entry_vertex))
                         for ret_line, ret_vertex in called_vertex_map.items():
