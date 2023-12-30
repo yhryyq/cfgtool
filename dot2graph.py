@@ -354,8 +354,8 @@ for item in cfunc:
 print(func_mapping)
 
 cross_lan_map=[]
-print("========linking the graphs"
-count = 0)
+print("========linking the graphs")
+count = 0
 #for func_name, func_data in tqdm(graphs.items()):
 for func_name, func_data in graphs.items():
     count+=1
