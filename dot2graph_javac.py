@@ -1,7 +1,7 @@
 from getdot import read_dot_files
 from pybgl.graph import DirectedGraph
 from collections import namedtuple,deque
-from filter import checkProject
+from filter_javac import checkProject
 import sys
 sys.setrecursionlimit(3000)
 from tqdm import tqdm
@@ -340,7 +340,7 @@ for func in funcs:
 with open("vertex_maps.txt", "w") as file:
     file.write(str(vertex_maps))
 
-print("========getting pyc mapping")
+print("========getting javac mapping")
 #get the rule-based mapping
 proj_dir=sys.argv[2]
 cfunc, ctype = checkProject(proj_dir)
@@ -381,12 +381,16 @@ for func_name, func_data in graphs.items():
                     for ret_line, ret_vertex in called_vertex_map.items():
                         if global_node_data[ret_vertex].is_return_line:
                             global_graph.add_edge(ret_vertex, vertex)
-                
-                for mapping  in func_mapping:
-                    if mapping[0] == callsite:
-                        r_callsite=mapping[1].strip(' ')
-                        if '(' in r_callsite and ')' in r_callsite:
-                            r_callsite = r_callsite.split(')')[1].strip(' ')
+                                
+                for mapping in func_mapping:
+                    r_callsite=mapping[1].strip(' ')
+                    if '(' in r_callsite and ')' in r_callsite:
+                        r_callsite = r_callsite.split(')')[1].strip(' ')
+                    print(f"mapping[0]:{mapping[0]},callsite:{callsite},r_callsite:{r_callsite}")
+                    print(f"r_callsite in vertex_maps:{r_callsite in vertex_maps}")
+                    print(f"vertex_maps:{vertex_maps}")
+                    if mapping[0] == callsite and r_callsite in vertex_maps:
+                        print(callsite,r_callsite)
                         try:
                             called_vertex_map = vertex_maps[r_callsite]
                         except:
@@ -402,6 +406,7 @@ for func_name, func_data in graphs.items():
                         if not edge_exists(global_graph, vertex, entry_vertex):
                             global_graph.add_edge(vertex, entry_vertex)
                         cross_lan_map.append((vertex, entry_vertex))
+                        print(vertex, entry_vertex)
                         for ret_line, ret_vertex in called_vertex_map.items():
                             if global_node_data[ret_vertex].is_return_line:
                                 if not edge_exists(global_graph, ret_vertex, vertex):
