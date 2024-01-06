@@ -280,6 +280,9 @@ def edge_exists(graph, source_vertex, target_vertex):
     return False
 
 
+
+NodeData = namedtuple('NodeData', ['line_number', 'line_flows', 'node_code', 'callsites', 'is_return_line', 'function_name', 'file_name'])
+
 global_graph = DirectedGraph()
 global_node_data = {}
 cross_lan_map = []
@@ -288,11 +291,13 @@ dot_dir=sys.argv[1]
 graph_file_path = f"{dot_dir}/global_graph.pkl"
 node_data_file_path = f"{dot_dir}/global_node_data.pkl"
 cross_lan_map_path = f"{dot_dir}/cross_lan_map.pkl"
+vertex_maps_path = f"{dot_dir}/vertex_maps.pkl"
 graph_file_exists = os.path.exists(graph_file_path)
 node_data_file_exists = os.path.exists(node_data_file_path)
 cross_lan_map_exists = os.path.exists(cross_lan_map_path)
+vertex_maps_exists = os.path.exists(vertex_maps_path)
 
-if graph_file_exists and node_data_file_exists and cross_lan_map_exists:
+if graph_file_exists and node_data_file_exists and cross_lan_map_exists and vertex_maps_exists:
     with open(graph_file_path, 'rb') as f:
         global_graph = pickle.load(f)
 
@@ -301,6 +306,9 @@ if graph_file_exists and node_data_file_exists and cross_lan_map_exists:
 
     with open(cross_lan_map_path, 'rb') as f:
         cross_lan_map = pickle.load(f)
+
+    with open(vertex_maps_path, 'rb') as f:
+        vertex_maps = pickle.load(f)
 else:
     print("========getting the function info")
     NodeData = namedtuple('NodeData', ['line_number', 'line_flows', 'node_code', 'callsites', 'is_return_line', 'function_name', 'file_name'])
@@ -478,6 +486,13 @@ else:
     except Exception as e:
         print(f"save cross_lan_map error:{e}")
 
+    try:
+        with open(f"{dot_dir}/vertex_maps.pkl", 'wb') as f:
+            pickle.dump(vertex_maps, f)
+        print("vettex_maps saved")
+    except Exception as e:
+        print(f"save vertex_maps error:{e}")
+
 function_name=sys.argv[3]
 start_line_number=int(sys.argv[4])
 
@@ -510,6 +525,7 @@ start_line_number=int(sys.argv[4])
 #function_name = "squareNumber"
 #start_line_number = 7
 print("========starting traverse")
+print(f"function name:{function_name}, start_line_number:{start_line_number}")
 if function_name in vertex_maps and start_line_number in vertex_maps[function_name]:
     start_vertex = vertex_maps[function_name][start_line_number]
     #dfs(global_graph, start_vertex, global_node_data=global_node_data)

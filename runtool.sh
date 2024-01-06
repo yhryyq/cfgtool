@@ -1,7 +1,7 @@
 #shas=("a13a7b82d4664c767575097c4a60c0b5fcd1098a" "9fede9489d98707240d0e7213104bc617daa4c75" "c320f7e296651cb624857ec6d88df8fc10fd0bb1" "60dc9730d5652f0632cd43caef437f01a734e374" "8fa4b7364d98659dd8fe28727f60d99a14b95850")
 #projects=("scipy/scipy" "scipy/scipy" "scipy/scipy" "scipy/scipy" "scipy/scipy")
-start_line=142 
-end_line=151
+start_line=162 
+end_line=171
 file_name="casestudy.csv"
 
 shas=($(awk -F, -v start=$start_line -v end=$end_line 'NR>=start && NR<=end {print $1}' $file_name))

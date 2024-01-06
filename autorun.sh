@@ -8,4 +8,4 @@ bash downloadsha.sh $sha $project
 
 repo="$(echo $project | cut -d'/' -f2)_$sha"
 
-python3 -u dot2graph.py "./outdir_${repo}_pyc" "./$repo" $func $line $borf 1>"log_${sha}_${borf}" 2>&1 & 
+python3 -u dot2graph.py "./outdir_${repo}_pyc" "./$repo" $func $line $borf 1>"log_${project}_${sha}_${borf}" 2>&1 & 
