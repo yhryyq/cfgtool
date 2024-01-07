@@ -525,6 +525,7 @@ start_line_number=int(sys.argv[4])
 #function_name = "squareNumber"
 #start_line_number = 7
 print("========starting traverse")
+print(f"function name:{function_name}, start_line_number:{start_line_number}")
 if function_name in vertex_maps and start_line_number in vertex_maps[function_name]:
     start_vertex = vertex_maps[function_name][start_line_number]
     #dfs(global_graph, start_vertex, global_node_data=global_node_data)
