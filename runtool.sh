@@ -2,10 +2,10 @@
 #projects=("scipy/scipy" "scipy/scipy" "scipy/scipy" "scipy/scipy" "scipy/scipy")
 
 
-start_line=11
-end_line=20
+start_line=19
+end_line=28
 
-file_name="pyc_bug_commits_wen.csv" #casestudy.csv casestudy_2.csv
+file_name="pyc_inter_bug_commits_wen.csv" #casestudy.csv casestudy_2.csv
 
 shas=($(awk -F, -v start=$start_line -v end=$end_line 'NR>=start && NR<=end {print $1}' $file_name))
 projects=($(awk -F, -v start=$start_line -v end=$end_line 'NR>=start && NR<=end {print $2}' $file_name))
