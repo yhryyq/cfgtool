@@ -231,7 +231,7 @@ def dfs_all_paths_backf(graph, start_vertex, visited_edges, path, global_node_da
 
 def check_path(path):
     for i in range(len(path) - 1):
-        if (path[i], path[i + 1]) in cross_lan_map:
+        if (path[i], path[i + 1]) in cross_lan_map or (path[i + 1], path[i]) in cross_lan_map:
             return True
     ''' 
     f = open("./APIList.txt")
@@ -253,7 +253,7 @@ def check_path(path):
 
 def check_path_backf(path):
     for i in range(len(path) - 1):
-        if (path[i+1], path[i]) in cross_lan_map:
+        if (path[i+1], path[i]) in cross_lan_map or (path[i], path[i+1]) in cross_lan_map:
             return True
     ''' 
     f = open("./APIList.txt")
