@@ -232,7 +232,9 @@ def dfs_all_paths_backf(graph, start_vertex, visited_edges, path, global_node_da
 def check_path(path):
     for i in range(len(path) - 1):
         if (path[i], path[i + 1]) in cross_lan_map or (path[i + 1], path[i]) in cross_lan_map:
-            print(f"mapping by {path[i]}, {path[i + 1]}")
+            node_info1 = f"{global_node_data[path[i]].line_number}({global_node_data[path[i]].file_name}) ({global_node_data[path[i]].function_name})"
+            node_info2 = f"{global_node_data[path[i+1]].line_number}({global_node_data[path[i+1]].file_name}) ({global_node_data[path[i+1]].function_name})"
+            print(f"mapping by {node_info1},and {node_info2}")
             return True
     ''' 
     f = open("./APIList.txt")
@@ -255,7 +257,9 @@ def check_path(path):
 def check_path_backf(path):
     for i in range(len(path) - 1):
         if (path[i+1], path[i]) in cross_lan_map or (path[i], path[i+1]) in cross_lan_map:
-            print(f"mapping by {path[i]}, {path[i + 1]}")
+            node_info1 = f"{global_node_data[path[i]].line_number}({global_node_data[path[i]].file_name}) ({global_node_data[path[i]].function_name})"
+            node_info2 = f"{global_node_data[path[i+1]].line_number}({global_node_data[path[i+1]].file_name}) ({global_node_data[path[i+1]].function_name})"
+            print(f"mapping by {node_info1},and {node_info2}")
             return True
     ''' 
     f = open("./APIList.txt")
