@@ -15,9 +15,12 @@ for ((i = 0; i < ${#shas[@]}; i++)); do
         project=${projects[i]}
 	#sha="535989ecb68da1affc531e866d190bfdbd9fc5fc"
 	#project="python/cpython"
-	repo=$(echo $project | cut -d'/' -f2)
-
-	git clone https://github.com/${project}.git
+	
+	#repo=$(echo $project | cut -d'/' -f2)
+	repo="$(echo $project | cut -d'/' -f2)_$sha"
+	git clone https://github.com/${project}.git $repo
+	#git clone https://github.com/${project}.git
+	
 	cd $repo
 	git fetch origin $sha
 	git reset --hard $sha
@@ -71,5 +74,5 @@ for ((i = 0; i < ${#shas[@]}; i++)); do
 
 	rm -rf c_$repo
 	rm -rf py_$repo
-	rm -rf $repo
+	#rm -rf $repo
 done
