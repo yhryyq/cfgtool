@@ -425,7 +425,7 @@ else:
                         if mapping[0] == callsite:
                             r_callsite=mapping[1].strip(' ')
                             if '(' in r_callsite and ')' in r_callsite:
-                                r_callsite = r_callsite.split(')')[1].strip(' ')
+                                r_callsite = r_callsite.split(')')[-1].strip(' ')
                             try:
                                 called_vertex_map = vertex_maps[r_callsite]
                             except:
