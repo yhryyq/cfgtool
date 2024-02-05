@@ -42,7 +42,7 @@ for ((i = 0; i < ${#shas[@]}; i++)); do
 		./joern-parse $folder
 		./joern-export --repr cfg --out outdir_temp
 		src_folder="outdir_temp"
-		dest_folder="outdir_${repo}_${sha}_pyc"
+		dest_folder="outdir_$(echo $project | cut -d'/' -f2)_${sha}_pyc"
 		for file in "$src_folder"/*; do
 		    folder_name=$(basename "$folder")
 		    filename=$(basename "$file")
