@@ -2,8 +2,8 @@
 #projects=("scipy/scipy" "scipy/scipy" "scipy/scipy" "scipy/scipy" "scipy/scipy")
 
 
-start_line=1
-end_line=20
+start_line=76
+end_line=90
 
 file_name="pyc_inter_bug_commits_151+.csv" #casestudy.csv casestudy_2.csv pyc_inter_bug_commits_wen.csv pyc_inter_bug_commits_temp.csv
 
