@@ -540,6 +540,7 @@ if function_name in vertex_maps and start_line_number in vertex_maps[function_na
         dfs_all_paths_backf(global_graph, start_vertex, set(), [], global_node_data,True)
     elif sys.argv[5] == 'f':
         dfs_all_paths(global_graph, start_vertex, set(), [], global_node_data,True)
+    print("=============Done=============")
 else:
     print(f"function({function_name}):{vertex_maps[function_name]}")
     print(f"function_name:{function_name} or line number:{start_line_number} cannot be found")
