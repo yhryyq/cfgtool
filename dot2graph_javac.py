@@ -104,7 +104,7 @@ def dfs_all_paths(graph, start_vertex, visited_edges, path, global_node_data,onl
 
     if not out_edges:
         if only_cross:
-            if check_path_backf(path):
+            if check_path(path):
                 path_info = "\n -> ".join(f"{global_node_data[v].line_number}({global_node_data[v].file_name}) ({global_node_data[v].function_name})" for v in path)
                 print("Path:\n", path_info)
                 print("====================")
@@ -229,7 +229,7 @@ def dfs_all_paths_backf(graph, start_vertex, visited_edges, path, global_node_da
 
 def check_path(path):
     for i in range(len(path) - 1):
-        if (path[i], path[i + 1]) in cross_lan_map:
+        if (path[i], path[i + 1]) in cross_lan_map or (path[i + 1], path[i]) in cross_lan_map:
             return True
     ''' 
     f = open("./APIList.txt")
@@ -251,7 +251,7 @@ def check_path(path):
 
 def check_path_backf(path):
     for i in range(len(path) - 1):
-        if (path[i+1], path[i]) in cross_lan_map:
+        if (path[i+1], path[i]) in cross_lan_map or (path[i], path[i+1]) in cross_lan_map:
             return True
     ''' 
     f = open("./APIList.txt")
@@ -371,7 +371,10 @@ for func_name, func_data in graphs.items():
                 if callsite in vertex_maps:
                     called_vertex_map = vertex_maps[callsite]
                     if called_vertex_map:
-                        entry_line_number = min(called_vertex_map.keys())
+                        if called_vertex_map.keys():
+                            entry_line_number = min(called_vertex_map.keys())
+                        else:
+                            print(f"r_callsite:{r_callsite} is empty")
                     else:
                         print(f"func_name:{func_name},callsite:{callsite} cannot found")
                         continue
@@ -385,7 +388,7 @@ for func_name, func_data in graphs.items():
                 for mapping in func_mapping:
                     r_callsite=mapping[1].strip(' ')
                     if '(' in r_callsite and ')' in r_callsite:
-                        r_callsite = r_callsite.split(')')[1].strip(' ')
+                        r_callsite = r_callsite.split(')')[-1].strip(' ')
                     print(f"mapping[0]:{mapping[0]},callsite:{callsite},r_callsite:{r_callsite}")
                     print(f"r_callsite in vertex_maps:{r_callsite in vertex_maps}")
                     print(f"vertex_maps:{vertex_maps}")
@@ -479,6 +482,7 @@ if function_name in vertex_maps and start_line_number in vertex_maps[function_na
         dfs_all_paths_backf(global_graph, start_vertex, set(), [], global_node_data,True)
     elif sys.argv[5] == 'f':
         dfs_all_paths(global_graph, start_vertex, set(), [], global_node_data,True)
+        print("=============Done=============")
 else:
     print(f"function({function_name}):{vertex_maps[function_name]}")
     print(f"function_name:{function_name} or line number:{start_line_number} cannot be found")

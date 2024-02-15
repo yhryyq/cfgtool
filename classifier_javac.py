@@ -30,7 +30,7 @@ class classifier():
         self.States = []
 
     def creatCPYClassifier(self):
-        S0 = State (0, "JNIEXPORT.*JNICALL.*JNIEnv")
+        S0 = State (0, "JNIEXPORT")
         self.AddState(S0)
 
     # def printStates(self):

@@ -83,7 +83,7 @@ def checkProject(path):
         # repo_name = repo_list[i].split('/')[1]
         # downloadProject(git_url,repo_name,sha_list[i])
     # repo_name = "c_extension"
-    clf = classifier(".c")
+    clf = classifier(".c .h")
     clf.creatCPYClassifier()
     # clf.printStates()
     c_func_list = []
@@ -104,7 +104,8 @@ def checkProject(path):
                     file_content = f.read()
                 #step1: find the PyMethodDef function
                 #pattern = r"JNIEXPORT\s+\w+\s+JNICALL\s+(Java_[\w_]+)_(\w+)\(JNIEnv\s+\*\w+, jobject\s+\w+"
-                pattern = r"JNIEXPORT\s+\w+\s+JNICALL\s+(Java_[\w_]+)_([\w_]+)\(JNIEnv\s+\*\w+, jobject\s+\w+"
+                #pattern = r"JNIEXPORT\s+\w+\s+JNICALL\s+(Java_[\w_]+)_([\w_]+)\(JNIEnv\s+\*\w+, jobject\s+\w+"
+                pattern = r"JNIEXPORT\s+\w+\s+JNICALL\s+(Java_[\w_]+)_([\w_]+)"
                 matches = re.finditer(pattern, file_content)
 
                 func_mapping=[]
