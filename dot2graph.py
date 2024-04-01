@@ -9,6 +9,8 @@ import sys
 import pickle
 import os
 
+buildinfunc=["abs","aiter","all","anext","any","ascii","bin","bool","breakpoint","bytearray","bytes","callable","chr","classmethod","compile","complex","delattr","dict","dir","divmod","enumerate","eval","exec","filter","float","format","frozenset","getattr","globals","hasattr","hash","help","hex","id","input","int","isinstance","issubclass","iter","len","list","locals","map","max","memoryview","min","next","object","oct","open","ord","pow","print","property","range","repr","reversed","round","set","setattr","slice","sorted","staticmethod","str","sum","super","tuple","type","vars","zip","__import__"]
+
 """
 def dfs(graph, start_vertex, vertex_map):
     visited = set()
@@ -108,6 +110,12 @@ def dfs_all_paths(graph, start_vertex, visited_edges, path, global_node_data,onl
         if only_cross:
             if check_path(path):
                 path_info = "\n -> ".join(f"{global_node_data[v].line_number}({global_node_data[v].file_name}) ({global_node_data[v].function_name})" for v in path)
+                func_count = 0
+                for v in path:
+                    #print(f"callsites:{global_node_data[v].callsites}")
+                    if global_node_data[v].callsites != []:
+                        func_count += sum(1 for callsit in global_node_data[v].callsites if callsit not in buildinfunc)
+                print(f"func_count:{func_count}")
                 print(f"len:{len(path)}")
                 print("Path:\n", path_info)
                 print("====================")
@@ -197,6 +205,12 @@ def dfs_all_paths_backf(graph, start_vertex, visited_edges, path, global_node_da
         if only_cross:
             if check_path_backf(path):
                 path_info = "\n -> ".join(f"{global_node_data[v].line_number}({global_node_data[v].file_name}) ({global_node_data[v].function_name})" for v in path)
+                func_count = 0
+                for v in path:
+                    #print(f"callsites:{global_node_data[v].callsites}")
+                    if global_node_data[v].callsites != []:
+                        func_count += sum(1 for callsit in global_node_data[v].callsites if callsit not in buildinfunc)
+                print(f"func_count:{func_count}")
                 print(f"len:{len(path)}")
                 print("Path\n:", path_info)
                 print("====================")
@@ -412,7 +426,7 @@ else:
             if node_data.callsites:
                 #print(node_data.callsites)
                 for callsite in node_data.callsites:
-                    if callsite in vertex_maps:
+                    if callsite in vertex_maps and callsite not in buildinfunc:
                         called_vertex_map = vertex_maps[callsite]
                         if called_vertex_map:
                             entry_line_number = min(called_vertex_map.keys())
@@ -426,8 +440,8 @@ else:
                             if global_node_data[ret_vertex].is_return_line:
                                 global_graph.add_edge(ret_vertex, vertex)
                     
-                    for mapping  in func_mapping:
-                        if mapping[0] == callsite:
+                    for mapping in func_mapping:
+                        if mapping[0] == callsite and callsite not in buildinfunc:
                             r_callsite=mapping[1].strip(' ')
                             if '(' in r_callsite and ')' in r_callsite:
                                 r_callsite = r_callsite.split(')')[-1].strip(' ')
