@@ -108,16 +108,19 @@ def dfs_all_paths(graph, start_vertex, visited_edges, path, global_node_data,onl
         if only_cross:
             if check_path(path):
                 path_info = "\n -> ".join(f"{global_node_data[v].line_number}({global_node_data[v].file_name}) ({global_node_data[v].function_name})" for v in path)
+                print(f"len:{len(path)}")
                 print("Path:\n", path_info)
                 print("====================")
-                with open('paths.txt', 'a') as file:
-                    file.write(path_info + '\n')
+                return
+                #with open('paths.txt', 'a') as file:
+                    #file.write(path_info + '\n')
         else:
             path_info = "\n -> ".join(f"{global_node_data[v].line_number}({global_node_data[v].file_name}) ({global_node_data[v].function_name})" for v in path)
+            print(f"len:{len(path)}")
             print("Path:\n", path_info)
             print("====================")
-            with open('paths.txt', 'a') as file:
-                file.write(path_info + '\n')
+            #with open('paths.txt', 'a') as file:
+                #file.write(path_info + '\n')
     else:
         for edge in out_edges:
             if edge not in visited_edges:
@@ -194,16 +197,18 @@ def dfs_all_paths_backf(graph, start_vertex, visited_edges, path, global_node_da
         if only_cross:
             if check_path_backf(path):
                 path_info = "\n -> ".join(f"{global_node_data[v].line_number}({global_node_data[v].file_name}) ({global_node_data[v].function_name})" for v in path)
+                print(f"len:{len(path)}")
                 print("Path\n:", path_info)
                 print("====================")
-                with open('paths_4.txt', 'a') as file:
-                    file.write(path_info + '\n')
+                return
+                #with open('paths_4.txt', 'a') as file:
+                    #file.write(path_info + '\n')
         else:
             path_info = "\n -> ".join(f"{global_node_data[v].line_number}({global_node_data[v].file_name}) ({global_node_data[v].function_name})" for v in path)
             print("Path:\n", path_info)
             print("====================")
-            with open('paths_4.txt', 'a') as file:
-                file.write(path_info + '\n')
+            #with open('paths_4.txt', 'a') as file:
+                #file.write(path_info + '\n')
             #print(f"cross:{check_path_backf(path)}")
     else:
         for edge in in_edges:
