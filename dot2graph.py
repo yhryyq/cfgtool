@@ -3,7 +3,7 @@ from pybgl.graph import DirectedGraph
 from collections import namedtuple,deque
 from filter import checkProject
 import sys
-sys.setrecursionlimit(3000)
+sys.setrecursionlimit(5000)
 from tqdm import tqdm
 import sys
 import pickle
