@@ -43,7 +43,19 @@ def extract_node_info(lines):
     node_code = {}
     method_returns = []
     return_lines = set()
+    record = ""
+    sign1 = 0
     for line in lines:
+        if (line[0] == '\"' and line[-2] != ']' and sign1 == 0) or (sign1 == 1):
+            if line[-2] == ']':
+                record += line[0:-1]
+                line = record
+                record = ""
+                sign1 = 0
+            else:
+                sign1 = 1
+                record += line[0:-1]
+                continue
         match = re.search(r'"(\d+)"\s+\[label\s+=\s+<\((.*?)\)<SUB>(\d+)</SUB>>\s*\]', line)
         if match:
             node_id, node_label, line_number = match.groups()
