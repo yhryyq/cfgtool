@@ -297,166 +297,186 @@ print("========getting the function info")
 NodeData = namedtuple('NodeData', ['line_number', 'line_flows', 'node_code', 'callsites', 'is_return_line', 'function_name', 'file_name'])
 
 dot_dir=sys.argv[1]
-funcs = read_dot_files(dot_dir)
-
+global_graph = DirectedGraph()
+cross_lan_map=[]
+global_node_data = {}
 #funcs = read_dot_files("./outdir_cpython_pyc")
 #funcs: filename, function_name, line_flows, callsites, node_code, return_lines
 
-global_graph = DirectedGraph()
+graph_file_path = f"{dot_dir}/global_graph.pkl"
+node_data_file_path = f"{dot_dir}/global_node_data.pkl"
+cross_lan_map_path = f"{dot_dir}/cross_lan_map.pkl"
+vertex_maps_path = f"{dot_dir}/vertex_maps.pkl"
+graph_file_exists = os.path.exists(graph_file_path)
+node_data_file_exists = os.path.exists(node_data_file_path)
+cross_lan_map_exists = os.path.exists(cross_lan_map_path)
+vertex_maps_exists = os.path.exists(vertex_maps_path)
 
-global_node_data = {}
+if graph_file_exists and node_data_file_exists and cross_lan_map_exists and vertex_maps_exists:
+    with open(graph_file_path, 'rb') as f:
+        global_graph = pickle.load(f)
 
-vertex_maps = {}
+    with open(node_data_file_path, 'rb') as f:
+        global_node_data = pickle.load(f)
 
-graphs = {}
+    with open(cross_lan_map_path, 'rb') as f:
+        cross_lan_map = pickle.load(f)
 
-print("========initializing the graphs")
-for func in funcs:
-    g = DirectedGraph()
-    keys = func[2].keys()
-    values = [item for sublist in func[2].values() for item in sublist]
-    function_data = {
-        'line_numbers': list(set(keys) | set(values)),
-        'line_flows': func[2],
-        'node_code': func[4],
-        'callsites': func[3],
-        'function_name': func[1],
-        'return_lines': func[5],
-        'file_name': func[0]
-    }
+    with open(vertex_maps_path, 'rb') as f:
+        vertex_maps = pickle.load(f)
+else:
+    funcs = read_dot_files(dot_dir)
+    vertex_maps = {}
+    graphs = {}
 
-    local_vertex_map = {}  # Local vertex to line number map
-    func_node_data = {}
+    print("========initializing the graphs")
+    for func in funcs:
+        g = DirectedGraph()
+        keys = func[2].keys()
+        values = [item for sublist in func[2].values() for item in sublist]
+        function_data = {
+            'line_numbers': list(set(keys) | set(values)),
+            'line_flows': func[2],
+            'node_code': func[4],
+            'callsites': func[3],
+            'function_name': func[1],
+            'return_lines': func[5],
+            'file_name': func[0]
+        }
 
-    for line_number in function_data['line_numbers']:
-        v = global_graph.add_vertex()
-        return_line = line_number in function_data['return_lines']
-        node_data = NodeData(
-            line_number=line_number,
-            line_flows=function_data['line_flows'].get(line_number, []),
-            node_code=function_data['node_code'].get(line_number, ''),
-            callsites=function_data['callsites'].get(line_number, []),
-            is_return_line=return_line,
-            function_name=function_data['function_name'],
-            file_name=function_data['file_name']
-        )
-        global_node_data[v] = node_data
-        func_node_data[v]= node_data
-        local_vertex_map[line_number] = v
+        local_vertex_map = {}  # Local vertex to line number map
+        func_node_data = {}
 
-    for line_number, flows in function_data['line_flows'].items():
-        source_vertex = local_vertex_map[line_number]
-        for target_line_number in flows:
-            target_vertex = local_vertex_map[target_line_number]
-            global_graph.add_edge(source_vertex, target_vertex)
+        for line_number in function_data['line_numbers']:
+            v = global_graph.add_vertex()
+            return_line = line_number in function_data['return_lines']
+            node_data = NodeData(
+                line_number=line_number,
+                line_flows=function_data['line_flows'].get(line_number, []),
+                node_code=function_data['node_code'].get(line_number, ''),
+                callsites=function_data['callsites'].get(line_number, []),
+                is_return_line=return_line,
+                function_name=function_data['function_name'],
+                file_name=function_data['file_name']
+            )
+            global_node_data[v] = node_data
+            func_node_data[v]= node_data
+            local_vertex_map[line_number] = v
 
-    graphs[function_data['function_name']] = {'graph': g, 'node_data_map': func_node_data, 'vertex_map': local_vertex_map}
-    vertex_maps[function_data['function_name']] = local_vertex_map
+        for line_number, flows in function_data['line_flows'].items():
+            source_vertex = local_vertex_map[line_number]
+            for target_line_number in flows:
+                target_vertex = local_vertex_map[target_line_number]
+                global_graph.add_edge(source_vertex, target_vertex)
 
-with open("vertex_maps.txt", "w") as file:
-    file.write(str(vertex_maps))
+        graphs[function_data['function_name']] = {'graph': g, 'node_data_map': func_node_data, 'vertex_map': local_vertex_map}
+        vertex_maps[function_data['function_name']] = local_vertex_map
 
-print("========getting javac mapping")
-#get the rule-based mapping
-proj_dir=sys.argv[2]
-cfunc, ctype = checkProject(proj_dir)
-seen = set()
-func_mapping = []
-for item in cfunc:
-    key = (item[0], item[1])
-    if key not in seen:
-        func_mapping.append(item)
-        seen.add(key)
-print(func_mapping)
+    #with open("vertex_maps.txt", "w") as file:
+        #file.write(str(vertex_maps))
 
-cross_lan_map=[]
-print("========linking the graphs")
-count = 0
-#for func_name, func_data in tqdm(graphs.items()):
-for func_name, func_data in graphs.items():
-    count+=1
-    print(f"{count}/{len(graphs)}")
-    local_graph = func_data['graph']
-    local_vertex_map = func_data['vertex_map']
-    node_data_map = func_data['node_data_map']
-    for vertex, node_data in node_data_map.items():
-        #print(f"vertex, node_data:{vertex, node_data}")
-        if node_data.callsites:
-            #print(node_data.callsites)
-            for callsite in node_data.callsites:
-                if callsite in vertex_maps:
-                    called_vertex_map = vertex_maps[callsite]
-                    if called_vertex_map:
-                        if called_vertex_map.keys():
-                            entry_line_number = min(called_vertex_map.keys())
+    print("========getting javac mapping")
+    #get the rule-based mapping
+    proj_dir=sys.argv[2]
+    cfunc, ctype = checkProject(proj_dir)
+    seen = set()
+    func_mapping = []
+    for item in cfunc:
+        key = (item[0], item[1])
+        if key not in seen:
+            func_mapping.append(item)
+            seen.add(key)
+    print(func_mapping)
+
+    cross_lan_map=[]
+    print("========linking the graphs")
+    count = 0
+    #for func_name, func_data in tqdm(graphs.items()):
+    for func_name, func_data in graphs.items():
+        count+=1
+        print(f"{count}/{len(graphs)}")
+        local_graph = func_data['graph']
+        local_vertex_map = func_data['vertex_map']
+        node_data_map = func_data['node_data_map']
+        for vertex, node_data in node_data_map.items():
+            #print(f"vertex, node_data:{vertex, node_data}")
+            if node_data.callsites:
+                #print(node_data.callsites)
+                for callsite in node_data.callsites:
+                    if callsite in vertex_maps:
+                        called_vertex_map = vertex_maps[callsite]
+                        if called_vertex_map:
+                            if called_vertex_map.keys():
+                                entry_line_number = min(called_vertex_map.keys())
+                            else:
+                                print(f"r_callsite:{r_callsite} is empty")
                         else:
-                            print(f"r_callsite:{r_callsite} is empty")
-                    else:
-                        print(f"func_name:{func_name},callsite:{callsite} cannot found")
-                        continue
-                    entry_vertex = called_vertex_map[entry_line_number]
-                    #print(vertex, entry_vertex)
-                    global_graph.add_edge(vertex, entry_vertex)
-                    for ret_line, ret_vertex in called_vertex_map.items():
-                        if global_node_data[ret_vertex].is_return_line:
-                            global_graph.add_edge(ret_vertex, vertex)
-                                
-                for mapping in func_mapping:
-                    r_callsite=mapping[1].strip(' ')
-                    if '(' in r_callsite and ')' in r_callsite:
-                        r_callsite = r_callsite.split(')')[-1].strip(' ')
-                    print(f"mapping[0]:{mapping[0]},callsite:{callsite},r_callsite:{r_callsite}")
-                    print(f"r_callsite in vertex_maps:{r_callsite in vertex_maps}")
-                    print(f"vertex_maps:{vertex_maps}")
-                    if mapping[0] == callsite and r_callsite in vertex_maps:
-                        print(callsite,r_callsite)
-                        try:
-                            called_vertex_map = vertex_maps[r_callsite]
-                        except:
-                            print(f"mapping error,r_callsite:{r_callsite}")
-                            continue
-                        if called_vertex_map.keys():
-                            entry_line_number = min(called_vertex_map.keys())
-                        else:
-                            print(f"r_callsite:{r_callsite} is empty")
+                            print(f"func_name:{func_name},callsite:{callsite} cannot found")
                             continue
                         entry_vertex = called_vertex_map[entry_line_number]
                         #print(vertex, entry_vertex)
-                        if not edge_exists(global_graph, vertex, entry_vertex):
-                            global_graph.add_edge(vertex, entry_vertex)
-                        cross_lan_map.append((vertex, entry_vertex))
-                        print(vertex, entry_vertex)
+                        global_graph.add_edge(vertex, entry_vertex)
                         for ret_line, ret_vertex in called_vertex_map.items():
                             if global_node_data[ret_vertex].is_return_line:
-                                if not edge_exists(global_graph, ret_vertex, vertex):
-                                    global_graph.add_edge(ret_vertex, vertex)
-                                cross_lan_map.append((ret_vertex, vertex))
+                                global_graph.add_edge(ret_vertex, vertex)
 
-print("========linking done")
-"""
-for func_name, data in graphs.items():
-    graph = data['graph']
-    node_data_map = data['node_data_map']
-    vertex_map = data['vertex_map']
+                    for mapping in func_mapping:
+                        r_callsite=mapping[1].strip(' ')
+                        if '(' in r_callsite and ')' in r_callsite:
+                            r_callsite = r_callsite.split(')')[-1].strip(' ')
+                        print(f"mapping[0]:{mapping[0]},callsite:{callsite},r_callsite:{r_callsite}")
+                        print(f"r_callsite in vertex_maps:{r_callsite in vertex_maps}")
+                        print(f"vertex_maps:{vertex_maps}")
+                        # if mapping[0] == callsite and r_callsite in vertex_maps:
+                        if mapping[0] == callsite:
+                            print(callsite,r_callsite)
+                            try:
+                                called_vertex_map = vertex_maps[r_callsite]
+                            except:
+                                print(f"mapping error,r_callsite:{r_callsite}")
+                                continue
+                            if called_vertex_map.keys():
+                                entry_line_number = min(called_vertex_map.keys())
+                            else:
+                                print(f"r_callsite:{r_callsite} is empty")
+                                continue
+                            entry_vertex = called_vertex_map[entry_line_number]
+                            #print(vertex, entry_vertex)
+                            if not edge_exists(global_graph, vertex, entry_vertex):
+                                global_graph.add_edge(vertex, entry_vertex)
+                            cross_lan_map.append((vertex, entry_vertex))
+                            print(vertex, entry_vertex)
+                            for ret_line, ret_vertex in called_vertex_map.items():
+                                if global_node_data[ret_vertex].is_return_line:
+                                    if not edge_exists(global_graph, ret_vertex, vertex):
+                                        global_graph.add_edge(ret_vertex, vertex)
+                                    cross_lan_map.append((ret_vertex, vertex))
 
-    for v, node_data in node_data_map.items():
-        for callsite in node_data.callsites:
-            if callsite in graphs:
-                called_func_data = graphs[callsite]
-                called_graph = called_func_data['graph']
-                called_node_data_map = called_func_data['node_data_map']
-                called_vertex_map = called_func_data['vertex_map']
-
-                entry_line_number = min(called_vertex_map.keys())
-                entry_vertex = called_vertex_map[entry_line_number]
-
-                graph.add_edge(v, entry_vertex)
-
-                for rv, rnode_data in called_node_data_map.items():
-                    if rnode_data.is_return_line:
-                        called_graph.add_edge(rv, v)
-
-"""
+    print("========linking done")
+    """
+    for func_name, data in graphs.items():
+        graph = data['graph']
+        node_data_map = data['node_data_map']
+        vertex_map = data['vertex_map']
+    
+        for v, node_data in node_data_map.items():
+            for callsite in node_data.callsites:
+                if callsite in graphs:
+                    called_func_data = graphs[callsite]
+                    called_graph = called_func_data['graph']
+                    called_node_data_map = called_func_data['node_data_map']
+                    called_vertex_map = called_func_data['vertex_map']
+    
+                    entry_line_number = min(called_vertex_map.keys())
+                    entry_vertex = called_vertex_map[entry_line_number]
+    
+                    graph.add_edge(v, entry_vertex)
+    
+                    for rv, rnode_data in called_node_data_map.items():
+                        if rnode_data.is_return_line:
+                            called_graph.add_edge(rv, v)
+    
+    """
 function_name=sys.argv[3]
 start_line_number=int(sys.argv[4])
 
