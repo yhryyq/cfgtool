@@ -1,7 +1,7 @@
 
 
-start_line=141
-end_line=160
+start_line=1
+end_line=40
 
 file_name="javac_200_commits.csv" #pyc_inter_bug_commits_81+.csv casestudy.csv casestudy_2.csv pyc_inter_bug_commits_wen.csv pyc_inter_bug_commits_temp.csv
 
