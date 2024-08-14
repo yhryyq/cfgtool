@@ -89,12 +89,15 @@ def checkProject(path):
     c_func_list = []
     inter_type_list = []
     # for file in findAllFile(PROJECT_PATH+ "/" + repo_name+"/"):
-    for file in findAllFile(path):
-        #if file == "./tensorflow/tensorflow/lite/python/interpreter.py":
-            #import pdb
-            #pdb.set_trace()
-        is_inter, state = clf.Match(file)
-        if is_inter:
+    # for file in findAllFile(path):
+    file = path
+    #if file == "./tensorflow/tensorflow/lite/python/interpreter.py":
+        #import pdb
+        #pdb.set_trace()
+    is_inter, state = clf.Match(file)
+    is_inter = True
+    state = "41"
+    if is_inter:
             # f.write(str(i)+"-"+repo_name+"-"+str(file)+"\\n")
             # f.write(repo_name + "-" + str(file) + " \n")
             ################################
@@ -152,5 +155,42 @@ def checkProject(path):
     #print("c_func_list:",c_func_list)
     #print("inter_type_list:",inter_type_list)
     return c_func_list, inter_type_list
+
+
+# def checkProject(file):
+#     c_func_list = []
+#     with open(file, 'r', encoding="utf8", errors="ignore") as f:
+#         file_content = f.read()
+#         #step1: find the PyMethodDef function
+#         py_method_def_pattern = r'PyMethodDef\s+\w+\s*\[\s*\]\s*=\s*\{(.*?\};)'
+#         py_method_defs = re.findall(py_method_def_pattern, file_content, re.DOTALL)
+#         #step2: find python-c function mapping
+#         ml_name_pattern = r'\{\s*"([^"]+)"\s*,\s*([^,]+),'
+#         ml_names = []
+#         for method_def in py_method_defs:
+#             ml_names.extend(re.findall(ml_name_pattern, method_def))
+#         # 通过PyArg_ParseTupleAndKeywords函数确定mapping函数的参数类型?然后再在PyMethodDef中找到定义的名字即可?
+#         # 先通过PyMethodDef确定当前文件中确定的目标函数，然后再通过PyArg_ParseTupleAndKeywords或PyArg_ParseTuple找到目标函数的参数，即可完成信息收集，最后再与C语言中的
+#         func_mapping=[]
+#         for tup in ml_names:
+#             func_mapping.append(tup+(file,))
+
+#         para_type = ""
+#         map_func_name = func_mapping[0][1]
+#         func_name = func_mapping[0][0]
+#         method_pattern = re.escape(map_func_name) + r"([\s\S]*)"
+#         match = re.search(method_pattern, file_content)
+#         key = match.groups()[0]
+#         # type_pattern = r'PyArg_ParseTupleAndKeywords\(.*"(.*)".*\)'
+#         type_pattern = r'PyArg_ParseTuple\(.*"(.*)".*\)'
+#         match = re.search(type_pattern, key)
+#         para_type = match.groups()[0]
+#         print(para_type)
+
+#         c_func_list.extend(func_mapping)
+#         print(c_func_list)
+#     inter_type_list = []
+#     inter_type_list.append("CE")
+#     return c_func_list, inter_type_list
 
         

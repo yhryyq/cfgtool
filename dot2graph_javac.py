@@ -1,12 +1,14 @@
-from getdot import read_dot_files
+from getdot_javac import read_dot_files
 from pybgl.graph import DirectedGraph
 from collections import namedtuple,deque
 from filter_javac import checkProject
-import sys
-sys.setrecursionlimit(3000)
+# sys.setrecursionlimit(3000)
 from tqdm import tqdm
 import sys
+import os
+import pickle
 
+buildinfunc = []
 """
 def dfs(graph, start_vertex, vertex_map):
     visited = set()
@@ -294,12 +296,14 @@ def edge_exists(graph, source_vertex, target_vertex):
     return False
 
 print("========getting the function info")
-NodeData = namedtuple('NodeData', ['line_number', 'line_flows', 'node_code', 'callsites', 'is_return_line', 'function_name', 'file_name'])
+NodeData = namedtuple('NodeData', ['line_number', 'line_flows', 'node_code', 'callsites', 'is_return_line', 'function_name', 'file_name', 'params', 'return_type'])
 
 dot_dir=sys.argv[1]
 global_graph = DirectedGraph()
 cross_lan_map=[]
 global_node_data = {}
+functions_data = {}
+imports_data = {}
 #funcs = read_dot_files("./outdir_cpython_pyc")
 #funcs: filename, function_name, line_flows, callsites, node_code, return_lines
 
@@ -307,6 +311,7 @@ graph_file_path = f"{dot_dir}/global_graph.pkl"
 node_data_file_path = f"{dot_dir}/global_node_data.pkl"
 cross_lan_map_path = f"{dot_dir}/cross_lan_map.pkl"
 vertex_maps_path = f"{dot_dir}/vertex_maps.pkl"
+imports_data_path = f"/home/kali/桌面/cfgtool/cfgtool/cfgtool_new/cfgtool/imports_data"
 graph_file_exists = os.path.exists(graph_file_path)
 node_data_file_exists = os.path.exists(node_data_file_path)
 cross_lan_map_exists = os.path.exists(cross_lan_map_path)
@@ -325,9 +330,20 @@ if graph_file_exists and node_data_file_exists and cross_lan_map_exists and vert
     with open(vertex_maps_path, 'rb') as f:
         vertex_maps = pickle.load(f)
 else:
-    funcs = read_dot_files(dot_dir)
+    print(os.getcwd())
+    if os.path.exists(imports_data_path):
+        for root, dirs, files in os.walk(imports_data_path):
+            for file in files:
+                with open(os.path.join(root, file), 'r') as f:
+                    lines = f.readlines()
+                for line in lines:
+                    if "import" in line:
+                        imports_data.setdefault(file[:file.index(".")], []).append(line[line.index(" ") + 1:len(line) - 1].replace(".", "-"))
+
+    funcs = read_dot_files(dot_dir, imports_data)
     vertex_maps = {}
     graphs = {}
+    data_finders = {}
 
     print("========initializing the graphs")
     for func in funcs:
@@ -341,9 +357,13 @@ else:
             'callsites': func[3],
             'function_name': func[1],
             'return_lines': func[5],
-            'file_name': func[0]
+            'file_name': func[0],
+            'data_finder': func[6],
+            'params': func[7],
+            'return_type': func[8]
+            # 可能需要记录一下函数的返回类型
         }
-
+        functions_data[function_data['function_name']] = function_data
         local_vertex_map = {}  # Local vertex to line number map
         func_node_data = {}
 
@@ -357,7 +377,9 @@ else:
                 callsites=function_data['callsites'].get(line_number, []),
                 is_return_line=return_line,
                 function_name=function_data['function_name'],
-                file_name=function_data['file_name']
+                file_name=function_data['file_name'],
+                params=function_data['params'],
+                return_type=function_data['return_type']
             )
             global_node_data[v] = node_data
             func_node_data[v]= node_data
@@ -370,7 +392,10 @@ else:
                 global_graph.add_edge(source_vertex, target_vertex)
 
         graphs[function_data['function_name']] = {'graph': g, 'node_data_map': func_node_data, 'vertex_map': local_vertex_map}
-        vertex_maps[function_data['function_name']] = local_vertex_map
+        if len(local_vertex_map) != 0:
+            vertex_maps[function_data['function_name']] = local_vertex_map
+        # 增加数据流查找方式
+        data_finders[function_data['function_name']] = function_data['data_finder']
 
     #with open("vertex_maps.txt", "w") as file:
         #file.write(str(vertex_maps))
@@ -392,6 +417,7 @@ else:
     print("========linking the graphs")
     count = 0
     #for func_name, func_data in tqdm(graphs.items()):
+    # 这里需要优先完成Java对C的映射，获取参数的类型，然后再完成C对Java的映射
     for func_name, func_data in graphs.items():
         count+=1
         print(f"{count}/{len(graphs)}")
@@ -440,6 +466,32 @@ else:
                             else:
                                 print(f"r_callsite:{r_callsite} is empty")
                                 continue
+                            # 成功映射上后，可以进行参数的替换将C的参数中除了env外的所有参数贴上表示符，
+                            # 首先根据被映射的函数名获取函数的node_data，然后修改其返回值和参数
+                            for i in range(len(functions_data[r_callsite]["params"])):
+                                # 排除第一个参数，第一个一般是env
+                                if i == 0:
+                                    continue
+                                elif i == 1:
+                                    # 第二个参数代表当前类的实例对象或类型
+                                    arg = functions_data[r_callsite]["params"][i]
+                                    target = functions_data[callsite]["function_name"]
+                                    argtype = target[target.rfind("-") + 1:target.rfind(":")]
+                                    argobj = arg[arg.index(" ") + 1:]
+                                    functions_data[r_callsite]["params"][i] = argtype + " " + argobj
+                                else:
+                                    arg = functions_data[r_callsite]["params"][i]
+                                    target = functions_data[callsite]["params"][i - 1]
+                                    argtype = target[:target.index(" ")]
+                                    argobj = arg[arg.index(" ") + 1:]
+                                    functions_data[r_callsite]["params"][i] = argtype + " " + argobj
+
+
+                            # 替换返回值
+                            functions_data[r_callsite]["return_type"] = functions_data[callsite]["return_type"]
+
+
+                            
                             entry_vertex = called_vertex_map[entry_line_number]
                             #print(vertex, entry_vertex)
                             if not edge_exists(global_graph, vertex, entry_vertex):
@@ -451,6 +503,10 @@ else:
                                     if not edge_exists(global_graph, ret_vertex, vertex):
                                         global_graph.add_edge(ret_vertex, vertex)
                                     cross_lan_map.append((ret_vertex, vertex))
+                            
+
+
+                            # 还需要考虑import的数据
 
     print("========linking done")
     """

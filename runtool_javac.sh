@@ -34,6 +34,7 @@ for ((i = 0; i < ${#shas[@]}; i++)); do
 
 	echo ========parse the c code in $repo========
 	base_dir="./c_$repo"
+	# 需要将文件夹名代表得包名赋值到所有dot文件上
 	time(
 	for folder in "$base_dir"/*/; do
 	    if [ -d "$folder" ]; then
