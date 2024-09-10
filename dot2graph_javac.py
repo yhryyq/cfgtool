@@ -295,6 +295,45 @@ def edge_exists(graph, source_vertex, target_vertex):
             return True
     return False
 
+
+def add_edge_from_line_to_func(graph: DirectedGraph, filename: str, src_funcname: str, src_classname: str, line_number: int, dst_funcname: str, dst_classname: str):
+    if (src_classname.endswith(".c") and src_classname != "") or (dst_classname.endswith(".c") and dst_classname != ""):
+        print("Please enter empty if your src written in c")
+        return
+    
+    
+    # 作用：在graph中往src函数中的指定行插入指向目标函数起始位置的edge
+    src_total_name = filename + "-" + src_classname + ":" + src_funcname
+    dst_total_name = filename + "-" + dst_classname + ":" + dst_funcname
+    
+    src_called_vertex_map = vertex_maps[src_total_name]
+
+    dst_called_vertex_map = vertex_maps[dst_total_name]
+    dst_entry_line_number = min(dst_called_vertex_map.keys())
+    dst_entry_vertex = dst_called_vertex_map[dst_entry_line_number]
+
+    # 添加edge
+    graph.add_edge(src_called_vertex_map[line_number], dst_entry_vertex)
+
+    
+def add_edge_from_line_to_line(graph: DirectedGraph, filename: str, src_funcname: str, src_classname: str,  src_line_number: int, dst_funcname: str, dst_line_number: int, dst_classname: str):
+    if (src_classname.endswith(".c") and src_classname != "") or (dst_classname.endswith(".c") and dst_classname != ""):
+        print("Please enter empty if your src written in c")
+        return
+    
+    
+    # 作用：在graph中往src函数中的指定行插入指向目标函数指定行的edge
+    src_total_name = filename + "-" + src_classname + ":" + src_funcname
+    dst_total_name = filename + "-" + dst_classname + ":" + dst_funcname
+    
+    src_called_vertex_map = vertex_maps[src_total_name]
+    dst_called_vertex_map = vertex_maps[dst_total_name]
+    
+    # 添加edge
+    graph.add_edge(src_called_vertex_map[src_line_number], dst_called_vertex_map[dst_line_number])
+
+
+
 print("========getting the function info")
 NodeData = namedtuple('NodeData', ['line_number', 'line_flows', 'node_code', 'callsites', 'is_return_line', 'function_name', 'file_name', 'params', 'return_type'])
 
@@ -311,7 +350,8 @@ graph_file_path = f"{dot_dir}/global_graph.pkl"
 node_data_file_path = f"{dot_dir}/global_node_data.pkl"
 cross_lan_map_path = f"{dot_dir}/cross_lan_map.pkl"
 vertex_maps_path = f"{dot_dir}/vertex_maps.pkl"
-imports_data_path = f"/home/kali/桌面/cfgtool/cfgtool/cfgtool_new/cfgtool/imports_data"
+# imports_data_path = f"/home/kali/桌面/cfgtool/cfgtool/cfgtool_new/cfgtool_fix/imports_data"
+imports_data_path = sys.argv[3]
 graph_file_exists = os.path.exists(graph_file_path)
 node_data_file_exists = os.path.exists(node_data_file_path)
 cross_lan_map_exists = os.path.exists(cross_lan_map_path)
@@ -450,9 +490,9 @@ else:
                         r_callsite=mapping[1].strip(' ')
                         if '(' in r_callsite and ')' in r_callsite:
                             r_callsite = r_callsite.split(')')[-1].strip(' ')
-                        print(f"mapping[0]:{mapping[0]},callsite:{callsite},r_callsite:{r_callsite}")
-                        print(f"r_callsite in vertex_maps:{r_callsite in vertex_maps}")
-                        print(f"vertex_maps:{vertex_maps}")
+                        # print(f"mapping[0]:{mapping[0]},callsite:{callsite},r_callsite:{r_callsite}")
+                        # print(f"r_callsite in vertex_maps:{r_callsite in vertex_maps}")
+                        # print(f"vertex_maps:{vertex_maps}")
                         # if mapping[0] == callsite and r_callsite in vertex_maps:
                         if mapping[0] == callsite:
                             print(callsite,r_callsite)
@@ -533,8 +573,8 @@ else:
                             called_graph.add_edge(rv, v)
     
     """
-function_name=sys.argv[3]
-start_line_number=int(sys.argv[4])
+function_name=sys.argv[4]
+start_line_number=int(sys.argv[5])
 
 #scipy
 #function_name = "convert_datetime_divisor_to_multiple"
@@ -570,9 +610,9 @@ if function_name in vertex_maps and start_line_number in vertex_maps[function_na
     start_vertex = vertex_maps[function_name][start_line_number]
     #dfs(global_graph, start_vertex, global_node_data=global_node_data)
     #dfs_path(global_graph, start_vertex,global_node_data)
-    if sys.argv[5] == 'b':
+    if sys.argv[6] == 'b':
         dfs_all_paths_backf(global_graph, start_vertex, set(), [], global_node_data,True)
-    elif sys.argv[5] == 'f':
+    elif sys.argv[6] == 'f':
         dfs_all_paths(global_graph, start_vertex, set(), [], global_node_data,True)
         print("=============Done=============")
 else:

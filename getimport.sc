@@ -1,4 +1,5 @@
-@main def exec(outFile: String) = {
-   importCpg("/home/kali/桌面/cfgtool/cfgtool/cfgtool_new/cfgtool/cpg.bin")
+@main def exec(cpgFile: String, outFile: String) = {
+   importCpg(cpgFile)
    cpg.imports.code.l #> outFile
 }
+

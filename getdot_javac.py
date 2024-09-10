@@ -19,8 +19,11 @@ def read_dot_files(folder_path, imports_data):
                         line_flows, data_finder, callsites, node_code, return_lines, params, return_type, c_java_mapping_vertexs = process_dot_file(lines, filename)
                         # 找到第二个"_"的位置，然后化简文件名称
                         filename = filename[:filename.index("_", filename.index("_") + 1)]
-                        if return_type != "" and not filename.startswith("c_"): # 标识当前函数在该文件被定义或声明
-                            avaiable_function.setdefault(filename, set()).add(function_name)
+                        if return_type == "":
+                            continue
+                        if return_type != "" """and not filename.startswith("c_")""": # 标识当前函数在该文件被定义或声明
+                            if not filename.startswith("c_"):
+                                avaiable_function.setdefault(filename, set()).add(function_name)
                             function_name = filename[filename.index("_") + 1:] + ":" + function_name
                         
                         # 将文件名和函数名组合，以便后续的识别
@@ -31,7 +34,7 @@ def read_dot_files(folder_path, imports_data):
     
     # 这里可能还需要对import的部分进行映射，指定import的目标，然后搜索指定的filename并搜索指定函数，有则插入
     for func in funcs:
-        if func[0].startswith("c_"):
+        if func[0].startswith("c_") or func[0] not in avaiable_function.keys():
             continue
         table = avaiable_function[func[0]]
         for key, value_list in func[3].items():
@@ -94,6 +97,8 @@ def extract_node_info(lines):
     sign1 = 0
     start_id = -1
     for line in lines:
+        if line == "\n" or line == "\r":
+            continue
         if (line[0] == '\"' and line[-2] != ']' and sign1 == 0) or (sign1 == 1):
             if line[-2] == ']':
                 record += line[0:-1]
@@ -105,6 +110,7 @@ def extract_node_info(lines):
                 record += line[0:-1]
                 continue
         match = re.search(r'"(\d+)"\s+\[label\s+=\s+<\((.*?)\)<SUB>(\d+)</SUB>>\s*\]', line)
+        # match2 = re.search(r'"(\d+)"\s+\[label\s+=\s+<\(METHOD_RETURN,(.*?)\)>\s*\]')
         if match:
             node_id, node_label, line_number = match.groups()
             node_info[node_id] = int(line_number)
@@ -130,7 +136,17 @@ def extract_node_info(lines):
             method_start = is_method_start(node_label)
             if method_start:
                 start_id = int(node_id)
+        
+        
+        # elif match2:
+        #     # 这里选择将其暂时存放
+        #     node_id, rettype = match2.groups()
+        #     # 在这里添加未被声明而直接使用的函数，可能来源于import，也可能来源于其他地方，也可能是错误的调用，
+        #     if rettype == "ANY":
+        #         # -1表示暂未匹配好line_number
+        #         node_info[node_id] = int(-1)
             
+
             # 可能还需要判断是否为static的类型
     return node_info, callsites, node_code, return_lines, method_returns, params, return_type, c_java_mapping_vertexs, start_id
 

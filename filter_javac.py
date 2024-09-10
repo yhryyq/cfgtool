@@ -144,7 +144,7 @@ def checkProject(path):
                     #underscore_positions = [pos for pos, char in enumerate(full_name) if char == '_']
                     #print(len(underscore_positions))                   
                     #if len(underscore_positions) <= 2:
-                    func_mapping.append((func_name,ori_full_name,file))
+                    func_mapping.append((func_name,file[file.rfind("/") + 1:file.index(".")] + ":" + ori_full_name,file))
                     #else:
                         #for pos in underscore_positions[1:]:
                             #first_part = full_name[:pos]
