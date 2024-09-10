@@ -1,5 +1,6 @@
 #!/bin/bash
 # 首先运行split分块，然后运行testtool.sh提取import、dot等信息，最后运行dot2graph_javac.py
+joern=$JOERN_DIR_PATH
 project=$(basename "$1")
 repo="java_"$project
 sha="123"
@@ -13,13 +14,13 @@ time(
 for file in "$base_dir"/*; do
 	echo $file
     if [ -f "$file" ]; then
-	/home/kali/桌面/joern-cli/joern-parse $file
+	$joern/joern-parse $file
 	# 读取imports信息
-	/home/kali/桌面/joern-cli/joern --script getimport.sc --param outFile="./imports_data/$(basename "$file").pkl" --param cpgFile="./cpg.bin"
+	$joern/joern --script getimport.sc --param outFile="./imports_data/$(basename "$file").pkl" --param cpgFile="./cpg.bin"
 	# 使用diy提取dot文件
 	echo $dest_folder
-	/home/kali/桌面/joern-cli/joern --script exportdot.sc --param outFile="$dest_folder" --param language="java" --param cpgFile="./cpg.bin"
-	# /home/kali/桌面/joern-cli/joern-export --repr cpg14 --out outdir_temp
+	$joern/joern --script exportdot.sc --param outFile="$dest_folder" --param language="java" --param cpgFile="./cpg.bin"
+	# $joern/joern-export --repr cpg14 --out outdir_temp
 	# src_folder="outdir_temp"
 	
 	# for file in "$src_folder"/*; do
@@ -38,11 +39,11 @@ base_dir=$repo
 time(
 for file in "$base_dir"/*; do
     if [ -f "$file" ]; then
-	/home/kali/桌面/joern-cli/joern-parse $file
-	# /home/kali/桌面/joern-cli/joern-export --repr cpg14 --out outdir_temp
+	$joern/joern-parse $file
+	# $joern/joern-export --repr cpg14 --out outdir_temp
 
 	# src_folder="outdir_temp"
-	/home/kali/桌面/joern-cli/joern --script exportdot.sc --param outFile="$dest_folder" --param language="c" --param cpgFile="./cpg.bin"
+	$joern/joern --script exportdot.sc --param outFile="$dest_folder" --param language="c" --param cpgFile="./cpg.bin"
 	# for file in "$src_folder"/*; do
 	#     folder_name=$(basename "$file")
 	#     filename=$(basename "$file")
