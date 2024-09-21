@@ -341,6 +341,11 @@ else:
     
     funcs = read_dot_files(dot_dir)
 
+    # use for debug
+    for i in funcs:
+        for j in i:
+            print(j)
+
     #funcs = read_dot_files("./outdir_cpython_pyc")
     #funcs: filename, function_name, line_flows, callsites, node_code, return_lines
 

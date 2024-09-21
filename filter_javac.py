@@ -72,7 +72,11 @@ def rmdir(path):
     else:
         print("folder remove failed")
 
-
+def find_nth_rindex(text, sub, n):
+    current_pos = len(text)
+    for _ in range(n + 1):
+        current_pos = text.rfind(sub, 0, current_pos)
+    return current_pos
 
 def checkProject(path):
 # mkdir(PROJECT_PATH)
@@ -106,12 +110,20 @@ def checkProject(path):
                 #pattern = r"JNIEXPORT\s+\w+\s+JNICALL\s+(Java_[\w_]+)_(\w+)\(JNIEnv\s+\*\w+, jobject\s+\w+"
                 #pattern = r"JNIEXPORT\s+\w+\s+JNICALL\s+(Java_[\w_]+)_([\w_]+)\(JNIEnv\s+\*\w+, jobject\s+\w+"
                 #pattern = r"JNIEXPORT\s+\w+\s+JNICALL\s+(Java_[\w_]+)_([\w_]+)"
-                pattern = r"JNIEXPORT\s+\w+\s+JNICALL\s+(Java_[\w_]+)_(_[\w_]+)"
+                # 可能还需要区分动态绑定和静态绑定，动态绑定主要是RegisterNatives函数中得JNINativeMethod结构体中进行绑定，原理与CPython类似
+                # pattern = r"JNIEXPORT\s+\w+\s+JNICALL\s+(Java_[\w_]+)_(_[\w_]+)"
+                # 静态绑定
+                pattern = r"JNIEXPORT\s+\w+\s+JNICALL\s+(Java_[\w_]+)_([\w_]+)"
+
+            
                 matches = re.finditer(pattern, file_content, re.DOTALL)
 
                 func_mapping=[]
                 for match in matches:
                     full_name = match.group(1) + "_" + match.group(2)
+                    name1 = match.group(1)
+                    name1 = name1[name1.index("_") + 1:].replace("_", "-") + ":" + match.group(2)
+                    
                     ori_full_name = full_name
                     # delete __[para]
                     index = full_name.rfind("__")
@@ -121,25 +133,35 @@ def checkProject(path):
                     #handle _1 in function name
                     count_under = full_name.count("_1")
                     full_name = full_name.replace("_1","_")
-                    def find_nth_rindex(text, sub, n):
-		        current_pos = len(text)
-		        for _ in range(n + 1):
-			    current_pos = text.rfind(sub, 0, current_pos)
-		        return current_pos
-                    index = find_nth_rindex(full_name, '_', count_under)
-	            func_name = full_name[index + 1:]
+
+
+                    
+                    # index = find_nth_rindex(full_name, '_', count_under)
+                    # func_name = full_name[index + 1:]
+                    func_name = name1
 
 
                     #underscore_positions = [pos for pos, char in enumerate(full_name) if char == '_']
                     #print(len(underscore_positions))                   
                     #if len(underscore_positions) <= 2:
-                    func_mapping.append((func_name,ori_full_name,file))
+                    func_mapping.append((func_name,file[file.rfind("/") + 1:file.index(".")] + ":" + ori_full_name,file))
                     #else:
                         #for pos in underscore_positions[1:]:
                             #first_part = full_name[:pos]
                             #second_part = full_name[pos + 1:]
                             #print(second_part)
                             #func_mapping.append((second_part,full_name,file))
+
+                # 动态绑定
+                pattern = r"JNINativeMethod\s+\w+_\w+\[[\d\s]*\]\s+=\s+\{(.*?\};)"
+                jv_method_defs = re.findall(pattern, file_content, re.DOTALL)
+
+                if len(jv_method_defs) != 0:
+                    pattern2 = r"\{\"(.*)\",\s*\"(.*)\",\s*\(.*?\)\s*(\w+)\}"
+                    matches = re.findall(pattern2, jv_method_defs[0])
+                    for match in matches:
+                        func_mapping.append((matches[0], matches[2], file))
+
 
                 c_func_list.extend(func_mapping)
 
